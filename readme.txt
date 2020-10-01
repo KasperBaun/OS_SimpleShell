@@ -36,7 +36,14 @@ When using a system call, the operating system switches from user-mode/space to 
 
 
 ## I/O REDIRECTION ##
+Using the pipe function we can make the output of one process become the input for another. This is also reffered to as InputOutput Redirection.
+Examples of InputOutput Redirection are:
+strings myshell.c | grep poggers <- the first function "strings myshell.c" takes all the strings from myshell.c and then we pipe them to another program which uses grep to search the strings for the string "poggers". So the output from the first program becomes the input for the next program.
 
+echo howdy > hello.txt <- this takes the output "howdy" and puts it in a hello.txt file.
+cat hello.txt > howdy.txt <- this takes the hello.txt and copies it to a howdy.txt
+
+Bibliography #2 - Gary Explains Linux Terminal Commands: Pipes and Redirection.
 
 ## PROGRAM ENVIRONMENT ##
 The program environment for this shell is that the code is run on a UNIX platform seeing as system calls are not so easily done in e.g. Windows operating system.
