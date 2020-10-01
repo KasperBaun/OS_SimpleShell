@@ -6,3 +6,7 @@ https://data-flair.training/blogs/header-files-in-c-cpp/
 2.
 # Used to understand i/o redirection - Gary Explains Linux Terminal Commands: Pipes and Redirection.
 youtube.com/watch?v=oyc_6UfoW3w&ab_channel=GaryExplains
+
+3.
+# Inspiration taken from this website for creating a pipe.
+https://stackoverflow.com/questions/39493754/writing-my-own-piping-function-in-c

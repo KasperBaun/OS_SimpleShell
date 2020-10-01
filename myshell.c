@@ -8,7 +8,7 @@ char *command;
 char*const* parameters;
 
 
-// Clears the console if the program has just started and displays welcomemessage
+// Clears the console if the program has just started and displays welcomemessage.
 if(shellLoaded){
   clearScreen();
   shellLoaded=0;
@@ -17,8 +17,8 @@ if(shellLoaded){
 
 
 while(1){
-// Shows the prompt and takes input from user
-  command = show_prompt();
+// Shows the prompt and takes input from user.
+  command = show_prompt(">>>>");
 // Reads input from user then decides where to go from there.
   read_command(command,parameters);
 }
