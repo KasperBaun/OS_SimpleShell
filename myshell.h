@@ -10,7 +10,7 @@
 char* show_prompt(char *promptmsg){
   char *promptInput = malloc(sizeof(char)*1024);
   printf("%s", promptmsg);
-  scanf("%s", promptInput);
+  fgets(promptInput,1024,stdin);
   return promptInput;
 }
 
@@ -29,31 +29,11 @@ void displayWelcome(){
   printf("%s\n","##########################################################");
 }
 
-
 //Reads command from userInput in prompt and takes action based on command and parameters
-void read_command(char *promptInput) {
-
-    // First part of read_command splits the string promptInput into command and arguments.
-    char *commandArgs[30];
-    int i = 0;
-    int sizeOfCommandArgs=1;
-    char *delim = " ";
-    char *ptr = strtok(promptInput, delim);
-    
-    while (ptr!=NULL)
-    {   
-        commandArgs[i] = ptr;
-        sizeOfCommandArgs++;
-        ptr = strtok(NULL, delim);
-        printf("%s", commandArgs[i]);
-    }
-    char* command = commandArgs[0];
-    
+void read_command(char* arguments[]) {
   
-  
-
   // pipe
-  if(strcmp(command,"pipe")==0 | strcmp(command, "Pipe")==0){
+  if(strcmp(arguments[0],"pipe")==0 | strcmp(arguments[0], "Pipe")==0){
     // Create a child process
     printf("%s\n","Drilling the hole and preparing the pipe!" ); 
     int pid=fork();
@@ -71,19 +51,19 @@ void read_command(char *promptInput) {
         // What command should the receiving process perform on the datainput received through the pipe? */
     }
 
-  if(strcmp(command,"echopipe")==0 | strcmp(command, "Echopipe")==0){
+  else if(strcmp(arguments[0],"echopipe")==0 | strcmp(arguments[0], "Echopipe")==0){
    
   }
 
 
 
-  if(strcmp(command,"exit")==0 | strcmp(command, "Exit")==0){
+  else if(strcmp(arguments[0],"exit")==0 | strcmp(arguments[0], "Exit")==0){
     // Closes all current running processes. Child processes are sent SIGCHLD signal to terminate.
     printf("%s\n","Goodbye!" );
     exit(0);
   }
 
-  if(strcmp(command,"commands")==0 | strcmp(command,"Commands")==0){
+  else if(!strcmp(arguments[0],"commands") | !strcmp(arguments[0],"Commands")){
     printf("%s\n","1. Type 'pipe' or '|' for initializing a pipe between 2 processes");
     printf("%s\n","2. Type 'pipe' for blablabla");
     printf("%s\n","3. Type 'pipe' for blablabla");
@@ -94,6 +74,16 @@ void read_command(char *promptInput) {
     printf("%s\n","8. Type 'pipe' for blablabla");
     printf("%s\n","9. Type 'exit/Exit' to exit the shell");
   }
+  else {
+    if (fork()!=0){
+      wait(NULL);
+    } else
+    {
+      execvp(arguments[0],arguments);
+      exit(0);
+    }
+    
+}
 }
 
 

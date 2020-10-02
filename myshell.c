@@ -7,8 +7,25 @@ int main(int argc, char const *argv[]) {
 int shellLoaded = 1;
 int status=1;
 char* promptInput;
+char* arguments[1024]; 
 
 
+
+// Splits the promptInput into command and arguments.
+void splitPrompt(char* promptInput){
+    
+    int i=0;
+    char* tokenString = strtok(promptInput, " \n");
+    
+    while (tokenString != NULL)
+    {         
+      //printf("%s",ptr);
+      arguments[i] = tokenString;
+    
+      i++;    
+      tokenString = strtok(NULL, " \n");
+    } tokenString = strtok(NULL, " \n");
+}   
 
 // Clears the console if the program has just started and displays an instructional welcome message
   if(shellLoaded){
@@ -19,10 +36,14 @@ char* promptInput;
 
 
   while(1){
-    // Shows the prompt and takes input from user
+    // Shows the prompt and takes input from user.
     promptInput = show_prompt("$ ");
+
+    //Splits the prompt into command and argument
+    splitPrompt(promptInput);
+
     // Reads input from user then decides where to go from there.
-    read_command(promptInput);
+    read_command(arguments);
   }
 return 0;
 }
