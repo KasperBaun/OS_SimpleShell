@@ -1,27 +1,29 @@
 #include "myshell.h"
+#include "stdio.h"
+#include "string.h"
 
 int main(int argc, char const *argv[]) {
 
 int shellLoaded = 1;
 int status=1;
-char *command;
-char*const* parameters;
+char* promptInput;
 
 
-// Clears the console if the program has just started and displays welcomemessage.
-if(shellLoaded){
-  clearScreen();
-  shellLoaded=0;
-  displayWelcome();
-}
+
+// Clears the console if the program has just started and displays an instructional welcome message.
+  if(shellLoaded){
+    clearScreen();
+    shellLoaded=0;
+    displayWelcome();
+  }
 
 
-while(1){
-// Shows the prompt and takes input from user.
-  command = show_prompt(">>>>");
-// Reads input from user then decides where to go from there.
-  read_command(command,parameters);
-}
+  while(1){
+    // Shows the prompt and takes input from user.
+    promptInput = show_prompt("$ ");
+    // Reads input from user then decides where to go from there.
+    read_command(promptInput);
+  }
 return 0;
 }
 
@@ -59,7 +61,7 @@ return 0;
 
 
 
-/* Create new childprocess.
+/* Create new childproce
    If succesful, execute command with parameters  in the child.
    If unsuccesfull - wait for child to terminate.
 if (fork() !=0){

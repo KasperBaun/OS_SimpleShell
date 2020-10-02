@@ -5,31 +5,75 @@
 
 
 
-// TODO: Make prompt take more than a string input (parameters)
-
-
 // show_prompt() - Shows the prompt with blinking cursor ready to take input will max support a size of 1024 chars
-char* show_prompt(char* promptmsg) {
-  char *command = malloc(sizeof(char)*1024);
+char* show_prompt(char *promptmsg){
+  char *promptInput = malloc(sizeof(char)*1024);
   printf("%s", promptmsg);
-  scanf("%s", command);
-  return command;
+  scanf("%s", promptInput);
+  return promptInput;
 }
 
+// Removes all code from the console screen
 void clearScreen() {
   system("clear");
 }
-void read_command(char* command, char*const* parameters) {
+
+// Displays an instructional welcome message to the user
+void displayWelcome(){
+  printf("%s\n","##########################################################");
+  printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
+  printf("%s\n","##         For a list of commands type: 'commands'      ##");
+  printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
+  printf("%s\n","##########################################################");
+}
+
+
+//Reads command from userInput in prompt and takes action based on command and parameters
+void read_command(char *promptInput) {
+
+    // First part of read_command splits the string promptInput into command and arguments.
+    char *commandArgs[30];
+    int i = 0;
+    commandArgs[i] = strtok(promptInput, " ");
+    
+    while (commandArgs[i]!=NULL)
+    {
+        commandArgs[++i] = strtok(NULL, " ");
+    }
+
+    char* command = commandArgs[0];
+    /*
+    // Calculates how many strings are in the array.
+    // This is done because we need to separate the command from the arguments. 
+    int lengthOfCommandArgs = sizeof(commandArgs)/sizeof(commandArgs[0]); 
+    for(int i=1; i<lengthOfCommandArgs-1; i++){
+      arguments[i]= commandArgs[i];
+    }
+    
+    for(int i = 0; i<lengthOfCommandArgs; i++){
+      printf("%s",commandArgs[i]);
+    } */
+
+
+
 
   // pipe
   if(strcmp(command,"pipe")==0 | strcmp(command, "Pipe")==0){
     // Create a child process
-    printf("%s\n","Drilling the hole and preparing the pipe!" );
-    // Ask for input to send through Pipe
-    char* input = show_prompt("What input would you like to be sent through pipe? (Type a command or some manual data input)\n");
-    // What command should the receiving process perform on the datainput received through the pipe?
+    printf("%s\n","Drilling the hole and preparing the pipe!" ); /*
+    int pid=fork();
+    if (pid !=0){
+        waitpid(-1, &status, 0);
+        } else {
+              // Ask for input to send through Pipe
+              char* input = show_prompt("What input would you like to be sent through pipe? (Type a command or some manual data input)\n");
+              execve(input, parameters, 0);
+              show_prompt();
+        }
+        // What command should the receiving process perform on the datainput received through the pipe? */
+    }
 
-  }
+
 
 
   if(strcmp(command,"exit")==0 | strcmp(command, "Exit")==0){
@@ -49,12 +93,6 @@ void read_command(char* command, char*const* parameters) {
     printf("%s\n","8. Type 'pipe' for blablabla");
     printf("%s\n","9. Type 'exit/Exit' to exit the shell");
   }
+}
 
-}
-void displayWelcome(){
-  printf("%s\n","##########################################################");
-  printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
-  printf("%s\n","##         For a list of commands type: 'commands'      ##");
-  printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
-  printf("%s\n","##########################################################");
-}
+
