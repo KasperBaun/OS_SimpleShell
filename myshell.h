@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include "string.h"
+#include "sys/wait.h" // Used by waitpid()
 
 
 
@@ -24,6 +25,7 @@ void displayWelcome(){
   printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
   printf("%s\n","##         For a list of commands type: 'commands'      ##");
   printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
+  printf("%s\n","##         Maximum input is command + 29 arguments      ##");
   printf("%s\n","##########################################################");
 }
 
@@ -34,45 +36,44 @@ void read_command(char *promptInput) {
     // First part of read_command splits the string promptInput into command and arguments.
     char *commandArgs[30];
     int i = 0;
-    commandArgs[i] = strtok(promptInput, " ");
+    int sizeOfCommandArgs=1;
+    char *delim = " ";
+    char *ptr = strtok(promptInput, delim);
     
-    while (commandArgs[i]!=NULL)
-    {
-        commandArgs[++i] = strtok(NULL, " ");
+    while (ptr!=NULL)
+    {   
+        commandArgs[i] = ptr;
+        sizeOfCommandArgs++;
+        ptr = strtok(NULL, delim);
+        printf("%s", commandArgs[i]);
     }
-
     char* command = commandArgs[0];
-    /*
-    // Calculates how many strings are in the array.
-    // This is done because we need to separate the command from the arguments. 
-    int lengthOfCommandArgs = sizeof(commandArgs)/sizeof(commandArgs[0]); 
-    for(int i=1; i<lengthOfCommandArgs-1; i++){
-      arguments[i]= commandArgs[i];
-    }
     
-    for(int i = 0; i<lengthOfCommandArgs; i++){
-      printf("%s",commandArgs[i]);
-    } */
-
-
-
+  
+  
 
   // pipe
   if(strcmp(command,"pipe")==0 | strcmp(command, "Pipe")==0){
     // Create a child process
-    printf("%s\n","Drilling the hole and preparing the pipe!" ); /*
+    printf("%s\n","Drilling the hole and preparing the pipe!" ); 
     int pid=fork();
+    int status;
     if (pid !=0){
         waitpid(-1, &status, 0);
         } else {
               // Ask for input to send through Pipe
-              char* input = show_prompt("What input would you like to be sent through pipe? (Type a command or some manual data input)\n");
-              execve(input, parameters, 0);
-              show_prompt();
+              //char* input = show_prompt("What input would you like to be sent through pipe? (Type a command or some manual data input)\n");
+              //execve(input, parameters, 0);
+              //show_prompt();
+              printf("%s", "Hello from child\n");
+              exit(0);
         }
         // What command should the receiving process perform on the datainput received through the pipe? */
     }
 
+  if(strcmp(command,"echopipe")==0 | strcmp(command, "Echopipe")==0){
+   
+  }
 
 
 

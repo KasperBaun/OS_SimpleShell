@@ -10,7 +10,7 @@ char* promptInput;
 
 
 
-// Clears the console if the program has just started and displays an instructional welcome message.
+// Clears the console if the program has just started and displays an instructional welcome message
   if(shellLoaded){
     clearScreen();
     shellLoaded=0;
@@ -19,7 +19,7 @@ char* promptInput;
 
 
   while(1){
-    // Shows the prompt and takes input from user.
+    // Shows the prompt and takes input from user
     promptInput = show_prompt("$ ");
     // Reads input from user then decides where to go from there.
     read_command(promptInput);
