@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include "string.h"
+#include "fcntl.h"
 #include "sys/wait.h" // Used by waitpid()
 
 
@@ -19,13 +20,66 @@ void clearScreen() {
   system("clear");
 }
 
+char* concatenateStrings(char** strings){
+  int i = 1; /* Setting index to 1 to avoid getting the command in the mix */
+  int count = 0;
+  char* result = NULL;
+  int totalLength = 0;
+
+  // Close program if input is empty
+  if (strings == NULL){
+    printf("%s","Input strings are NULL");
+    return NULL;
+  }
+
+  // Iterate through the array to find out the size
+  while(strings[i]!=NULL){
+    totalLength = strlen(strings[i]);
+    i++;
+  }
+  count = i;
+  totalLength++;
+
+  // Allocate memory for the result string
+  result = malloc(sizeof(char)*totalLength);
+  if(result==NULL){
+    printf("%s", "Memory allocation failed somehow\n");
+    return NULL;
+  }
+
+  // Concatenate input strings into result
+  for(i=1; i<count; i++){
+    strcat(result,strings[i]);
+  }
+  return result;
+
+}
+
+// Changes the current directory to the specified directory if possible
+int cd(char *pth){
+   char path[1000];
+   strcpy(path,pth);
+   char cwd[256]; 
+   getcwd(cwd,sizeof(cwd));
+
+  if(pth==NULL){
+    printf("%s%s\n","Path is:",pth);
+  }
+
+   strcat(cwd,"/"); 
+   strcat(cwd,path);
+   chdir(cwd);    
+
+   printf("%s%s\n","Current directory changed to: ",cwd);
+   return 0;
+  }
+
 // Displays an instructional welcome message to the user
 void displayWelcome(){
   printf("%s\n","##########################################################");
   printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
   printf("%s\n","##         For a list of commands type: 'commands'      ##");
   printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
-  printf("%s\n","##         Maximum input is command + 29 arguments      ##");
   printf("%s\n","##########################################################");
 }
 
@@ -51,29 +105,45 @@ void read_command(char* arguments[]) {
         // What command should the receiving process perform on the datainput received through the pipe? */
     }
 
-  else if(strcmp(arguments[0],"echopipe")==0 | strcmp(arguments[0], "Echopipe")==0){
-   
+  else if(strcmp(arguments[0],"dup2")==0 | strcmp(arguments[0], "DUP2")==0){
+    // Creates a pointer to the filedescriptor of fileName.txt which is entered by the user.
+    // This is found using concatenateString(arguments[])
+    char* fdName = concatenateStrings(arguments);
+    int fdPointer = open(fdName,O_CREAT| O_APPEND|O_RDWR|O_TRUNC,0644);
+    int stdOut = 1;
+    printf("%s%s\n", "Now redirecting standard output to :",fdName);
+    dup2(fdPointer,stdOut);
+    
   }
 
 
 
+  // Change path to the specified path
+  else if(strcmp(arguments[0],"cd")==0 | strcmp(arguments[0], "CD")==0){
+    char* path = concatenateStrings(arguments);
+    cd(path);
+  }
+
+
+	
+  else if(!strcmp(arguments[0],"commands") | !strcmp(arguments[0],"Commands")){
+    printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
+    printf("%s\n","2. Type 'pwd' for current working directory");
+    printf("%s\n","3. Type 'ls' for listing files in current working directory");
+    printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
+    printf("%s\n","5. Type 'dup2 <filename.txt>' or 'DUP2 <filename.txt>' to redirect stdOut to filename.txt");
+    printf("%s\n","6. Type 'exit/Exit' to exit the shell");
+  }
+  
+  
+    // Closes all current running processes and terminates the Shell.d
   else if(strcmp(arguments[0],"exit")==0 | strcmp(arguments[0], "Exit")==0){
-    // Closes all current running processes. Child processes are sent SIGCHLD signal to terminate.
     printf("%s\n","Goodbye!" );
     exit(0);
   }
-
-  else if(!strcmp(arguments[0],"commands") | !strcmp(arguments[0],"Commands")){
-    printf("%s\n","1. Type 'pipe' or '|' for initializing a pipe between 2 processes");
-    printf("%s\n","2. Type 'pipe' for blablabla");
-    printf("%s\n","3. Type 'pipe' for blablabla");
-    printf("%s\n","4. Type 'pipe' for blablabla");
-    printf("%s\n","5. Type 'pipe' for blablabla");
-    printf("%s\n","6. Type 'pipe' for blablabla");
-    printf("%s\n","7. Type 'pipe' for blablabla");
-    printf("%s\n","8. Type 'pipe' for blablabla");
-    printf("%s\n","9. Type 'exit/Exit' to exit the shell");
-  }
+  
+  // If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
+  // e.g. "ls" or "cd"
   else {
     if (fork()!=0){
       wait(NULL);

@@ -11,7 +11,7 @@ char* arguments[1024];
 
 
 
-// Splits the promptInput into command and arguments.
+// Splits the promptInput into an array of string where command and arguments area
 void splitPrompt(char* promptInput){
     
     int i=0;
@@ -27,7 +27,7 @@ void splitPrompt(char* promptInput){
     } tokenString = strtok(NULL, " \n");
 }   
 
-// Clears the console if the program has just started and displays an instructional welcome message
+// Clears the console if the program has just started and displays an instructional welcome message..
   if(shellLoaded){
     clearScreen();
     shellLoaded=0;

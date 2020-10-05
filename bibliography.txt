@@ -10,3 +10,7 @@ youtube.com/watch?v=oyc_6UfoW3w&ab_channel=GaryExplains
 3.
 # Inspiration taken from this website for creating a pipe.
 https://stackoverflow.com/questions/39493754/writing-my-own-piping-function-in-c
+
+4. 
+# Inspiration for implementing CD
+https://stackoverflow.com/questions/16094814/implementing-cd-system-call-using-c-if-condition
