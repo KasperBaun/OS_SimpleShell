@@ -7,18 +7,6 @@
 
 
 
-// show_prompt() - Shows the prompt with blinking cursor ready to take input will max support a size of 1024 chars
-char* show_prompt(char *promptmsg){
-  char *promptInput = malloc(sizeof(char)*1024);
-  printf("%s", promptmsg);
-  fgets(promptInput,1024,stdin);
-  return promptInput;
-}
-
-// Removes all code from the console screen
-void clearScreen() {
-  system("clear");
-}
 
 char* concatenateStrings(char** strings){
   int i = 1; /* Setting index to 1 to avoid getting the command in the mix */
@@ -55,36 +43,9 @@ char* concatenateStrings(char** strings){
 
 }
 
-// Changes the current directory to the specified directory if possible
-int cd(char *pth){
-   char path[1000];
-   strcpy(path,pth);
-   char cwd[256]; 
-   getcwd(cwd,sizeof(cwd));
-
-  if(pth==NULL){
-    printf("%s%s\n","Path is:",pth);
-  }
-
-   strcat(cwd,"/"); 
-   strcat(cwd,path);
-   chdir(cwd);    
-
-   printf("%s%s\n","Current directory changed to: ",cwd);
-   return 0;
-  }
-
-// Displays an instructional welcome message to the user
-void displayWelcome(){
-  printf("%s\n","##########################################################");
-  printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
-  printf("%s\n","##         For a list of commands type: 'commands'      ##");
-  printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
-  printf("%s\n","##########################################################");
-}
 
 //Reads command from userInput in prompt and takes action based on command and parameters
-void read_command(char* arguments[]) {
+void execute_command(char* arguments[]) {
   
   // pipe
   if(strcmp(arguments[0],"pipe")==0 | strcmp(arguments[0], "Pipe")==0){
@@ -117,13 +78,13 @@ void read_command(char* arguments[]) {
   }
 
 
-
+/*
   // Change path to the specified path
   else if(strcmp(arguments[0],"cd")==0 | strcmp(arguments[0], "CD")==0){
     char* path = concatenateStrings(arguments);
     cd(path);
   }
-
+*/
 
 	
   else if(!strcmp(arguments[0],"commands") | !strcmp(arguments[0],"Commands")){
@@ -150,7 +111,6 @@ void read_command(char* arguments[]) {
     } else
     {
       execvp(arguments[0],arguments);
-      exit(0);
     }
     
 }

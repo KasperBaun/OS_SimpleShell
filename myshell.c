@@ -1,51 +1,46 @@
 #include "myshell.h"
-#include "stdio.h"
-#include "string.h"
-
-int main(int argc, char const *argv[]) {
-
-int shellLoaded = 1;
-int status=1;
-char* promptInput;
-char* arguments[1024]; 
+#include "rinseInput.c"
 
 
+void splitInput(char* input, char* destination);
+void displayWelcome();
+void printCurrentLoc();
 
-// Splits the promptInput into an array of string where command and arguments area
-void splitPrompt(char* promptInput){
+
+int main(int argc, char const *argv[]) {  
+  /* Clears the console on load
+   * and displays an instructional welcome message.
+   */
+  system("clear");
+  displayWelcome();
     
-    int i=0;
-    char* tokenString = strtok(promptInput, " \n");
-    
-    while (tokenString != NULL)
-    {         
-      //printf("%s",ptr);
-      arguments[i] = tokenString;
-    
-      i++;    
-      tokenString = strtok(NULL, " \n");
-    } tokenString = strtok(NULL, " \n");
-}   
-
-// Clears the console if the program has just started and displays an instructional welcome message..
-  if(shellLoaded){
-    clearScreen();
-    shellLoaded=0;
-    displayWelcome();
-  }
-
-
   while(1){
-    // Shows the prompt and takes input from user.
-    promptInput = show_prompt("$ ");
-
-    //Splits the prompt into command and argument
-    splitPrompt(promptInput);
-
-    // Reads input from user then decides where to go from there.
-    read_command(arguments);
+    /* Shows prompt, takes input, 
+       splits input into cmd and arg and reads commands
+    */
+    char* promptInput = malloc(sizeof(char)*1024);
+    //char* arguments[1024];
+    printCurrentLoc();
+    fgets(promptInput,1024,stdin);
+    //splitInput(promptInput,arguments);
+    //execute_command(arguments);
   }
 return 0;
+}
+
+
+// Displays an instructional welcome message to the user
+void displayWelcome(){
+  printf("%s\n","##########################################################");
+  printf("%s\n","##         Welcome to s172483's Simple Shell            ##");
+  printf("%s\n","##         For a list of commands type: 'commands'      ##");
+  printf("%s\n","##         To exit: Ctrl+Z or type exit/Exit            ##");
+  printf("%s\n","##########################################################");
+}
+void printCurrentLoc(){
+  char path[256];
+  getcwd(path,256);
+  printf("%s >> ",path);
 }
 
 
