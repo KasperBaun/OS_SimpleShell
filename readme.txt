@@ -2,7 +2,7 @@ Welcome to MyShell.
 
 1.
 ## COMPILE THE PROGRAM ##
-To compile the program use 'gcc myshell.c -o myshell' or make myshell. Your current working directory has to be where the myshell.c and myshel.h files are located.
+To compile the program use 'gcc myshell.c -o myshell' or make myshell. Your current working directory has to be where the myshell.c and myshell.h files are located.
 If neither of these 2 options work, you may not have GCC or make installed on your platform.
 Using any linux distribution - type 'gcc --version' or 'make --version' in terminal to see if you have GCC or make installed.
 If you are not presented with details on the version of GCC or make, please install either of the two.
