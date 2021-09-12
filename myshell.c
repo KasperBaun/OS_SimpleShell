@@ -2,7 +2,6 @@
 #include "rinseInput.c"
 
 
-void splitInput(char* input, char* destination);
 void displayWelcome();
 void printCurrentLoc();
 
@@ -18,11 +17,14 @@ int main(int argc, char const *argv[]) {
     /* Shows prompt, takes input, 
        splits input into cmd and arg and reads commands
     */
-    char* promptInput = malloc(sizeof(char)*1024);
-    //char* arguments[1024];
+    char* userInput = malloc(sizeof(char)*1024);
+    char** commandsAndArgs[20][1024] = NULL;
     printCurrentLoc();
-    fgets(promptInput,1024,stdin);
-    //splitInput(promptInput,arguments);
+    fgets(userInput,1024,stdin);
+    parseInput(userInput,commandsAndArgs);
+    for(int i=0; commandsAndArgs[i] != NULL; i++){
+      printf("Command and arguments for input %d is %s \n",i,commandsAndArgs[i]);
+    }
     //execute_command(arguments);
   }
 return 0;
