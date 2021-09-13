@@ -1,4 +1,4 @@
-#include "myshell.h"
+#include "systemcalls.c"
 #include "rinseInput.c"
 
 
@@ -18,14 +18,14 @@ int main(int argc, char const *argv[]) {
        splits input into cmd and arg and reads commands
     */
     char* userInput = malloc(sizeof(char)*1024);
-    char** commandsAndArgs[20][1024] = NULL;
+    char*** commandsAndArgs = malloc(sizeof(char)*1024*30);
     printCurrentLoc();
     fgets(userInput,1024,stdin);
-    parseInput(userInput,commandsAndArgs);
-    for(int i=0; commandsAndArgs[i] != NULL; i++){
-      printf("Command and arguments for input %d is %s \n",i,commandsAndArgs[i]);
+    sortInput(userInput, commandsAndArgs);
+    for(int i=0; commandsAndArgs[i]!=NULL;i++){
+    printf("%s\n",commandsAndArgs[i]);
     }
-    //execute_command(arguments);
+    //execute_command(commandsAndArgs);
   }
 return 0;
 }
