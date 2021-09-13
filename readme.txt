@@ -35,7 +35,7 @@ EXEC
 The Shell makes use of Exec system calls that looks for a program to execute with the specified filename or path.It "takes over" the current running process with another process. It exchanges the process image.
 This is implemented in the end of the read_command program.
 This is because, if none of the manually implemented commands are executed, the exec system call will take command and arguments and look for file of that name or path to execute.
-This effectively "extends" the shell with programs such as "pwd", "ls" and more that are allready  on the computer and requiring very little programming effort from my part.
+This effectively "extends" the shell with programs such as "pwd", "ls" and more that are already  on the computer.
 
 DUP2
 Copies the filedescriptor for the stdout to a path or file specified by the user.
@@ -53,10 +53,3 @@ cat hello.txt > howdy.txt <- this takes the hello.txt and copies it to a howdy.t
 
 Bibliography #2 - Gary Explains Linux Terminal Commands: Pipes and Redirection.
 
-## PROGRAM ENVIRONMENT ##
-The program environment for this shell is that the code is run on a UNIX platform seeing as system calls are not so easily done in e.g. Windows operating system.
-The Shell is written in C language which has built-in system-call functions in the header <unistd.h>.
-
-
-## BACKGROUND PROGRAM EXECUTION ##
-A few places in the shell it makes use of fork(). This spawns a child process that can run the command or program and do it in the "background".

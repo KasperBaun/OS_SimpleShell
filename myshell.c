@@ -44,34 +44,15 @@ int sortInput(char input[], char* destination[]){
 
     /* Search for chars matching '|' (pipe) first */
     if(strstr(input,"|"))
-    {
-        /* First, we divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
+    {   /* First, we divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
         tokenizerLoop(input,"|",destination);
-        /*printf("User input after calling sortInput():\n");
-        for(int i=0; destination[i] != NULL; i++)
-        {
-            printf("destination[%d] = %s\n",i,destination[i]);
-        }
-        */
-         return 1;
+        return 1;
     }
     else
     {
         /* This is only called if there is no '|' - so I can safely assume that only one command is entered by user
            therefore I use only destination[0] instead of creating a for-loop */
         tokenizerLoop(input," \n",destination);
-
-        /* printf used for testing only
-         *  int i = 0;
-         *  printf("User input after sorting (no pipe):\n");
-         *  while(destination[i]!=NULL)
-         *  {
-         *  printf("%s\n",destination[i]);
-         *  i++;
-         *  }
-        */
-
-
     } return 0;
 }
 
@@ -103,46 +84,40 @@ int cd(char *pth){
             }
     return 0;
 }
-void execute_commands_piped(char* commandsAndArgs[])
+void pipeMachine(char *command[], int i, int *pipefd_outer)
 {
+    printf("%i",i);
+    int pipefd[2];
+    pipe(pipefd);
     int pid = fork();
-    if (pid>0)
+    if (pid > 0)
     {
         wait(0);
+        if (pipefd_outer != NULL)
+        {
+            close(pipefd_outer[0]);
+            dup2(pipefd_outer[1], 1);
+        }
+        close(pipefd[1]);
+        dup2(pipefd[0], 0);
+        execvp(command[0], &command[i]);
+        puts("Command not found!");
+        exit(127);
     }
-    else if (pid == 0) {
-        /* Check if there are more than one command in the arrays (user input '|')*/
-        if (commandsAndArgs[1] != NULL) {
-            int i = 0;
-            while (commandsAndArgs[i] != NULL) i++;
-            //pipeFunc(commandsAndArgs, --i, NULL);
-        } else {
-            char* firstCmd = &commandsAndArgs[0][0];
-            /* Closes all current running processes and terminates the Shell */
-            if(strcmp(firstCmd,"exit")==0 | strcmp(firstCmd, "Exit")==0)
-            {
-                printf("%s\n","Goodbye!" );
-                exit(0);
-            }
-            /* Shows instructional commands */
-            if(!strcmp(firstCmd,"commands") | !strcmp(firstCmd,"Commands")){
-                printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
-                printf("%s\n","2. Type 'pwd' for current working directory");
-                printf("%s\n","3. Type 'ls' for listing files in current working directory");
-                printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
-                printf("%s\n","5. Type 'dup2 <filename.txt>' or 'DUP2 <filename.txt>' to redirect stdOut to filename.txt");
-                printf("%s\n","6. Type 'exit/Exit' to exit the shell");
-            }
-            /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
-            e.g. "ls" or "cd" */
-
-            execvp(&commandsAndArgs[0][0], &commandsAndArgs[0]);
-            printf("ExecVP failed @ single command launch");
-
-            {
-
-            }
-
+    else if (pid == 0)
+    {
+        if (i > 1)
+        {
+            pipeMachine(command, --i, pipefd);
+            exit(0);
+        }
+        else
+        {
+            close(pipefd[0]);
+            dup2(pipefd[1], 1);
+            execvp(command[i-1], &command[i-1]);
+            puts("Command not found!");
+            exit(127);
         }
     }
     else
@@ -150,6 +125,7 @@ void execute_commands_piped(char* commandsAndArgs[])
         exit(1);
     }
 }
+
 void execute_command(char* command[]){
     /* Closes all current running processes and terminates the Shell */
     if(strcmp(command[0],"exit")==0 | strcmp(command[0], "Exit")==0 | strcmp(command[0], "EXIT")==0)
@@ -182,6 +158,12 @@ void execute_command(char* command[]){
         printf("\nFailed forking child..");
         return;
     } else if (pid == 0) {
+        if (command[1] != NULL)
+        {
+            int i = 0;
+            while(command[i] != NULL) i++;
+            pipeMachine(command, --i, NULL);
+        }
         /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
             e.g. "ls" or "cd" */
         if (execvp(command[0], command) < 0) {
@@ -220,14 +202,10 @@ int main(int argc, char const *argv[]) {
        splits input into cmd and arg and reads commands
     */
     char userInput[MAXLENGTH], *parsedArguments[MAXLIST];
-    int pipe = 0;
-    int i = 0;
     printCurrentLoc();
     fgets(userInput,MAXLENGTH,stdin);
-    printf("User input before calling sortInput(): %s",userInput);
-    pipe = sortInput(userInput, parsedArguments);
-    if(pipe){
-        execute_commands_piped(parsedArguments);
-    } else execute_command(parsedArguments);
+    //printf("User input before calling sortInput(): %s",userInput);
+    sortInput(userInput, parsedArguments);
+    execute_command(parsedArguments);
   }
 }
