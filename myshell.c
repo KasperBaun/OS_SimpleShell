@@ -11,25 +11,25 @@
 #define MAXLIST 100 /* Maximum number or arguments */
 
 
-// Displays an instructional welcome message to the user
+/* Displays an instructional welcome message to the user*/
 void displayWelcome(){
     printf("*\tHello %s and\n",getenv("USER"));
     printf("*\tWelcome to s172483's Simple Shell\n");
     printf("*\tFor a list of commands type: 'commands'\n");
-    printf("*\tTo exit: Ctrl+Z or type exit/Exit\n\n");
+    printf("*\tTo exit: Ctrl+Z or type exit/Exit/EXIT\n\n");
 }
 void printCurrentLoc(){
     char path[256];
     getcwd(path,256);
     printf("%s >> ",path);
 }
-/* Takes a pointer to a char array(string) as input
+void tokenizerLoop(char *input, char*delim, char* output[])
+{
+    /* Takes a pointer to a char array(string) as input
    and splits it up into tokens delimited by the
    defined delimiter.
    It requires a pointer to a string array to update
    values in that array */
-void tokenizerLoop(char *input, char*delim, char* output[])
-{
     int i=0;
     char *token = strtok(input,delim);
     output[i] = token;
@@ -39,7 +39,6 @@ void tokenizerLoop(char *input, char*delim, char* output[])
         output[++i] = strtok(NULL,delim);
     }
 }
-
 /* Splits the input into an array of strings where command and arguments are */
 int sortInput(char input[], char* destination[]){
 
@@ -48,13 +47,12 @@ int sortInput(char input[], char* destination[]){
     {
         /* First, we divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
         tokenizerLoop(input,"|",destination);
-        printf("User input after calling sortInput():\n");
+        /*printf("User input after calling sortInput():\n");
         for(int i=0; destination[i] != NULL; i++)
         {
             printf("destination[%d] = %s\n",i,destination[i]);
         }
-        /* Now, we have to rinse for whitespace and \n - call tokenizer using two delimiters at once  */
-
+        */
          return 1;
     }
     else
