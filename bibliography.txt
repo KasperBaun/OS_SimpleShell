@@ -1,7 +1,6 @@
 1.
-# Used to figure out Header Files
+# Used to figure out Header Files (but ended up not using them and just making a large .c file for the whole shell)
 https://data-flair.training/blogs/header-files-in-c-cpp/
-
 
 2.
 # Used to understand i/o redirection - Gary Explains Linux Terminal Commands: Pipes and Redirection.
@@ -14,3 +13,20 @@ https://stackoverflow.com/questions/39493754/writing-my-own-piping-function-in-c
 4. 
 # Inspiration for implementing CD
 https://stackoverflow.com/questions/16094814/implementing-cd-system-call-using-c-if-condition
+
+5.
+Linux man pages
+dup()
+dup(2)
+fork()
+execvp()
+
+6.
+C documentation for reading up on various standard library functions such as:
+strstr()
+strlen()
+strtok()
+getcwd()
+chdir()
+strcat()
+opendir()

@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h> // Used by waitpid()
+#include <dirent.h>
+#include <asm-generic/errno-base.h>
+#include <errno.h>
+
+#define MAXLENGTH 1024 /* Maximum length of input string */
+#define MAXLIST 100 /* Maximum number or arguments */
 
 
 // Displays an instructional welcome message to the user
@@ -33,40 +39,73 @@ void tokenizerLoop(char *input, char*delim, char* output[])
         output[++i] = strtok(NULL,delim);
     }
 }
-/* Removes whitespace and \n from an array of strings */
-char** arrayTokenizerLoop(char* command)
-{
-    char** result = malloc(sizeof(char)*1024);
-    for (int i=0; i<1024; ++i)
-    {
-        result[i] = malloc(sizeof(char)*1024);
-        tokenizerLoop(command," \n",result);
-    }
-    return result;
-}
+
 /* Splits the input into an array of strings where command and arguments are */
-void sortInput(char* input, char*** destination){
+int sortInput(char input[], char* destination[]){
 
     /* Search for chars matching '|' (pipe) first */
     if(strstr(input,"|"))
     {
         /* First, we divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
-        char *commands[1024];
-        tokenizerLoop(input,"|",commands);
-        /* Now, we have to rinse for whitespace and \n - do this by calling a tokenizer function that supports array's  */
-        for(int i=0; commands[i]!=NULL; i++)
+        tokenizerLoop(input,"|",destination);
+        printf("User input after calling sortInput():\n");
+        for(int i=0; destination[i] != NULL; i++)
         {
-            destination[i] = arrayTokenizerLoop(commands[i]);
+            printf("destination[%d] = %s\n",i,destination[i]);
         }
+        /* Now, we have to rinse for whitespace and \n - call tokenizer using two delimiters at once  */
+
+         return 1;
     }
     else
     {
         /* This is only called if there is no '|' - so I can safely assume that only one command is entered by user
-           therefore I only use destination[0] instead of creating a for loop */
-        destination[0] = arrayTokenizerLoop(input);
-    }
+           therefore I use only destination[0] instead of creating a for-loop */
+        tokenizerLoop(input," \n",destination);
+
+        /* printf used for testing only
+         *  int i = 0;
+         *  printf("User input after sorting (no pipe):\n");
+         *  while(destination[i]!=NULL)
+         *  {
+         *  printf("%s\n",destination[i]);
+         *  i++;
+         *  }
+        */
+
+
+    } return 0;
 }
-void execute_single_command(char* commandsAndArgs[])
+
+/* Changes the current directory to the specified directory if possible*/
+int cd(char *pth){
+    char path[1000];
+    strcpy(path,pth);
+    char cwd[256];
+    getcwd(cwd,sizeof(cwd));
+
+    if(pth==NULL){
+        printf("Path is: %s\n",pth);
+        chdir(cwd);
+        return 0;
+    }
+    /* concatenate current working directory and user-specified path and check if it exists */
+    strcat(cwd,"/");
+    strcat(cwd,path);
+    DIR* dir = opendir(cwd);
+    if(dir)
+    {   chdir(cwd);
+        printf("%s%s\n","Current directory changed to: ", getcwd(cwd,sizeof (cwd)));
+    }   else if(ENOENT == errno)
+        {
+        printf("Directory: %s does not exist!\n",cwd);
+        }   else
+            {
+            printf("opendir() failed for some reason");
+            }
+    return 0;
+}
+void execute_commands_piped(char* commandsAndArgs[])
 {
     int pid = fork();
     if (pid>0)
@@ -113,6 +152,64 @@ void execute_single_command(char* commandsAndArgs[])
         exit(1);
     }
 }
+void execute_command(char* command[]){
+    /* Closes all current running processes and terminates the Shell */
+    if(strcmp(command[0],"exit")==0 | strcmp(command[0], "Exit")==0 | strcmp(command[0], "EXIT")==0)
+    {
+        printf("%s\n","Goodbye!" );
+        exit(0);
+    }
+    /* Shows instructional commands */
+    if(!strcmp(command[0],"commands") | !strcmp(command[0],"Commands")){
+        printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
+        printf("%s\n","2. Type 'pwd' for current working directory");
+        printf("%s\n","3. Type 'ls' for listing files in current working directory");
+        printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
+        printf("%s\n","5. Type 'dup2 <filename.txt>' or 'DUP2 <filename.txt>' to redirect stdOut to filename.txt");
+        printf("%s\n","6. Type 'exit/Exit' to exit the shell");
+    }
+        // Change path to the specified path
+    else if(strcmp(command[0],"cd")==0 | strcmp(command[0], "CD")==0){
+        if(command[1]!=NULL){
+            char* path = command[1];
+            cd(path);
+        }
+        return;
+    }
+
+    /* Forking a child process to run the command in */
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        printf("\nFailed forking child..");
+        return;
+    } else if (pid == 0) {
+        /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
+            e.g. "ls" or "cd" */
+        if (execvp(command[0], command) < 0) {
+            printf("\nCould not execute command..");
+        }
+        exit(0);
+    } else {
+        /* wait for child to terminate */
+        wait(NULL);
+        return;
+    }
+}
+/* Just used for understanding chars in C */
+void * print_chars(char *process_string) {
+    int i;
+    int string_len;
+    string_len = strlen(process_string);
+    int newline = 10;
+
+    printf("String is %s and its length is %d\n", process_string, string_len);
+
+    for(i = 0; i < string_len+1; i++) {
+        putchar(process_string[i]);
+        putchar(newline);
+    }
+}
 int main(int argc, char const *argv[]) {  
   /* Clears the console on load
    * and displays an instructional welcome message.
@@ -124,17 +221,15 @@ int main(int argc, char const *argv[]) {
     /* Shows prompt, takes input, 
        splits input into cmd and arg and reads commands
     */
-    char* userInput = malloc(sizeof(char)*1024);
-    char*** commandsAndArgs = malloc(sizeof(char)*1024*30);
+    char userInput[MAXLENGTH], *parsedArguments[MAXLIST];
+    int pipe = 0;
+    int i = 0;
     printCurrentLoc();
-    fgets(userInput,1024,stdin);
-    sortInput(userInput, commandsAndArgs);
-    for(int i=0; commandsAndArgs[i]!=NULL;i++){
-        for(int j=0; commandsAndArgs[i][j] != NULL; j++)
-        {
-            printf("%s\n",commandsAndArgs[i][j]);
-        }
-    }
-    //execute_command(commandsAndArgs);
+    fgets(userInput,MAXLENGTH,stdin);
+    printf("User input before calling sortInput(): %s",userInput);
+    pipe = sortInput(userInput, parsedArguments);
+    if(pipe){
+        execute_commands_piped(parsedArguments);
+    } else execute_command(parsedArguments);
   }
 }

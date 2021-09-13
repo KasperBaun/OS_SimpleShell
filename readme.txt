@@ -2,6 +2,7 @@ Welcome to MyShell.
 
 1.
 ## COMPILE THE PROGRAM ##
+Open up terminal by right-clicking at the project folder and select "open terminal" or just open terminal and navigate to project using 'cd'.
 To compile the program use 'gcc myshell.c -o myshell' or make myshell. Your current working directory has to be where the myshell.c and myshell.h files are located.
 If neither of these 2 options work, you may not have GCC or make installed on your platform.
 Using any linux distribution - type 'gcc --version' or 'make --version' in terminal to see if you have GCC or make installed.
@@ -13,14 +14,15 @@ To run the program type ./myshell. Your current working directory has to be wher
 
 3.
 ## MANUAL ##
-The program comes with a built in manual. Upon load, instructions will print on screen to let you know the commands available.
+The program comes with a built in manual. Upon load, a small welcome text tells you the instructions to let you know the commands available.
 Type 'commands' or 'Commands' to be presented with the full list of available commands.
+Most linux commands should work since the shell makes use of execvp to search for binaries.
 The commands are:
- 1. Type 'cd <path>' or 'CD <path>' to change current directory");
- 2. Type 'pwd' for current working directory");
- 3. Type 'ls' for listing files in current working directory");
- 4. Type 'pipe <program>' for nothing - not implemented yet");
- 5. Type 'exit/Exit' to exit the shell");
+ 1. Type 'cd <path>' or 'CD <path>' to change current directory.
+ 2. Type 'pwd' for current working directory.
+ 3. Type 'ls' for listing files in current working directory.
+ 4. Type 'pipe <program>' for nothing - not implemented yet.
+ 5. Type 'exit/Exit/EXIT' to exit the shell.
 
 
 
