@@ -40,20 +40,19 @@ void tokenizerLoop(char *input, char*delim, char* output[])
     }
 }
 /* Splits the input into an array of strings where command and arguments are */
-int sortInput(char input[], char* destination[]){
+sortInput(char input[], char* destination[]){
 
     /* Search for chars matching '|' (pipe) first */
     if(strstr(input,"|"))
-    {   /* First, we divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
+    {   /* Divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
         tokenizerLoop(input,"|",destination);
-        return 1;
     }
     else
     {
         /* This is only called if there is no '|' - so I can safely assume that only one command is entered by user
            therefore I use only destination[0] instead of creating a for-loop */
         tokenizerLoop(input," \n",destination);
-    } return 0;
+    }
 }
 
 /* Changes the current directory to the specified directory if possible*/
@@ -125,7 +124,6 @@ void pipeMachine(char *command[], int i, int *pipefd_outer)
         exit(1);
     }
 }
-
 void execute_command(char* command[]){
     /* Closes all current running processes and terminates the Shell */
     if(strcmp(command[0],"exit")==0 | strcmp(command[0], "Exit")==0 | strcmp(command[0], "EXIT")==0)
