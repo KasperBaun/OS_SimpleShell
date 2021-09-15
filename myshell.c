@@ -14,7 +14,7 @@
 /* Displays an instructional welcome message to the user*/
 void displayWelcome(){
     printf("*\tHello %s and\n",getenv("USER"));
-    printf("*\tWelcome to s172483's Simple Shell\n");
+    printf("*\tWelcome to group 2's Simple Shell\n");
     printf("*\tFor a list of commands type: 'commands'\n");
     printf("*\tTo exit: Ctrl+Z or type exit/Exit/EXIT\n\n");
 }
@@ -22,6 +22,14 @@ void printCurrentLoc(){
     char path[256];
     getcwd(path,256);
     printf("%s >> ",path);
+}
+void printCommands(){
+        printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
+        printf("%s\n","2. Type 'pwd' for current working directory");
+        printf("%s\n","3. Type 'ls' for listing files in current working directory");
+        printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
+        printf("%s\n","5. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching");
+        printf("%s\n","6. Type 'exit/Exit' to exit the shell");
 }
 void tokenizerLoop(char *input, char*delim, char* output[])
 {
@@ -40,7 +48,7 @@ void tokenizerLoop(char *input, char*delim, char* output[])
     }
 }
 /* Splits the input into an array of strings where command and arguments are */
-sortInput(char input[], char* destination[]){
+void sortInput(char input[], char* destination[]){
 
     /* Search for chars matching '|' (pipe) first */
     if(strstr(input,"|"))
@@ -85,44 +93,7 @@ int cd(char *pth){
 }
 void pipeMachine(char *command[], int i, int *pipefd_outer)
 {
-    printf("%i",i);
-    int pipefd[2];
-    pipe(pipefd);
-    int pid = fork();
-    if (pid > 0)
-    {
-        wait(0);
-        if (pipefd_outer != NULL)
-        {
-            close(pipefd_outer[0]);
-            dup2(pipefd_outer[1], 1);
-        }
-        close(pipefd[1]);
-        dup2(pipefd[0], 0);
-        execvp(command[0], &command[i]);
-        puts("Command not found!");
-        exit(127);
-    }
-    else if (pid == 0)
-    {
-        if (i > 1)
-        {
-            pipeMachine(command, --i, pipefd);
-            exit(0);
-        }
-        else
-        {
-            close(pipefd[0]);
-            dup2(pipefd[1], 1);
-            execvp(command[i-1], &command[i-1]);
-            puts("Command not found!");
-            exit(127);
-        }
-    }
-    else
-    {
-        exit(1);
-    }
+ /* Implement pipe functionality here */
 }
 void execute_command(char* command[]){
     /* Closes all current running processes and terminates the Shell */
@@ -133,12 +104,7 @@ void execute_command(char* command[]){
     }
     /* Shows instructional commands */
     if(!strcmp(command[0],"commands") | !strcmp(command[0],"Commands")){
-        printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
-        printf("%s\n","2. Type 'pwd' for current working directory");
-        printf("%s\n","3. Type 'ls' for listing files in current working directory");
-        printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
-        printf("%s\n","5. Type 'dup2 <filename.txt>' or 'DUP2 <filename.txt>' to redirect stdOut to filename.txt");
-        printf("%s\n","6. Type 'exit/Exit' to exit the shell");
+        printCommands();
     }
         // Change path to the specified path
     else if(strcmp(command[0],"cd")==0 | strcmp(command[0], "CD")==0){
@@ -158,15 +124,11 @@ void execute_command(char* command[]){
     } else if (pid == 0) {
         if (command[1] != NULL)
         {
-            int i = 0;
-            while(command[i] != NULL) i++;
-            pipeMachine(command, --i, NULL);
+            // Implement pipe functionality here
         }
         /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
             e.g. "ls" or "cd" */
-        if (execvp(command[0], command) < 0) {
-            printf("\nCould not execute command..");
-        }
+        execvp(command[0], command);
         exit(0);
     } else {
         /* wait for child to terminate */
