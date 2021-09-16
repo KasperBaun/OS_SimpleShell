@@ -8,9 +8,9 @@
 #include <errno.h>
 
 #define MAXLENGTH 1024 /* Maximum length of input string */
-#define MAXARG 100 /* Maximum amount of args */
+#define MAXCMD 100 /* Maximum amount of args */
 
-
+void pipeMachine();
 /* Displays an instructional welcome message to the user*/
 void displayWelcome(){
     printf("*\tHello %s and\n",getenv("USER"));
@@ -49,19 +49,21 @@ void tokenizerLoop(char *input, char*delim, char* output[])
     }
 }
 void printArrayContent(char*array[]){
+    if(array[0]!=NULL)
+    {
     for(int i=0; array[i]!=NULL;i++){
-        printf("Array[%d] is: %s \n",i,array[i]);
+        printf("Element[%d] is: %s \n",i,array[i]);
     }
+    } else printf("printArrayContent() - Nothing to print im afraid");    
 }
 /* Allocates memory on the heap for the string (cmd+args) size and returns a pointer to the adress of the first element in the array */
 char ** commandFactory(char* input){
-    char **command = malloc(MAXARG*sizeof(char*));
-  
+    char **command = malloc(MAXCMD*sizeof(char*));
     tokenizerLoop(input," \n",command);
     return command;
 }
 /* Splits the input into an array of strings where command and arguments are */
-void sortInput(char input[], char** commandArray[]){
+int sortInput(char input[], char** commandArray[]){
     /* Clean string for \n */ 
     input[strcspn(input, "\n")] = 0;
 
@@ -70,20 +72,20 @@ void sortInput(char input[], char** commandArray[]){
     {   /* Divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
         char *temp[MAXLENGTH];
         tokenizerLoop(input,"|",temp);
-        printArrayContent(temp);
+        //printArrayContent(temp);
         for(int i=0; temp[i]!=NULL;i++){
             commandArray[i] = commandFactory(temp[i]);
-            printf("commandArray[%d] : %s \n",i,*commandArray[i]);
-            printf("commandArray[%d] : %s \n",i,commandArray[i][1]);
-            printf("commandArray[%d] : %s \n",i,commandArray[i][2]);
+            //printArrayContent(commandArray[i]);
         }
+        return 1;
     }
     else
     {
         /* This is only called if there is no '|' - so I can safely assume that only one command is entered by user
            therefore I use only commandArray[0] instead of creating a for-loop */
-        //commandArray[0] = commandFactory(input);
-        printArrayContent(commandArray[0]);        
+        commandArray[0] = commandFactory(input);
+        //printArrayContent(commandArray[0]); 
+        return 0;       
     }
 }
 /* Changes the current directory to the specified directory if possible*/
@@ -114,11 +116,17 @@ int cd(char *pth){
             }
     return 0;
 }
-void pipeMachine(char *command[], int i, int *pipefd_outer)
-{
- /* Implement pipe functionality here */
+void freeMemory(char ***commandArray){
+    for(int i=0; i<MAXLENGTH; i++){
+        int j = 0;
+        while(commandArray[i][j]!=NULL){
+            free(commandArray[i][j]);
+            j++;
+        }
+        free(commandArray[i]);
+    }
 }
-void execute_command(char** command[]){
+void execute_command(char** command[], int pipeStatus){
     /* Closes all current running processes and terminates the Shell */
     if(strcmp(command[0][0],"exit")==0 | strcmp(command[0][0], "Exit")==0 | strcmp(command[0][0], "EXIT")==0)
     {
@@ -137,14 +145,48 @@ void execute_command(char** command[]){
         }
         return;
     }
-   
-    /* Forking a child process to run the command in */
-    pid_t pid = fork();
 
-    if (pid == -1) {
+    /* Check for pipe */  
+    if (pipeStatus){ 
+         /* Implement pipe functionality here */
+   /* More than one command so we need to redirect some output to another process */
+            int pipefd[2];
+            int pid;
+            char recv[MAXLENGTH];
+            pipe(pipefd);
+            
+            switch (pid=fork())
+            {
+            case -1: perror("fork in execute_command pipe section");
+                exit(1);
+            
+            case 0: 
+            /* We are in child process */
+            close(pipefd[0]); /* Close read-end of pipe */
+            FILE *out = fdopen(pipefd[1],"w"); /* Open pipe as stream for writing */
+            dup2(pipefd[1], 1);  // send stdout to the pipe
+            dup2(pipefd[1], 2);  // send stderr to the pipe
+            close(pipefd[1]);    // this descriptor is no longer needed
+            execvp(command[0][0],command[0]);
+            break;
+            
+            default:
+            /* We are in parent process */
+            close(pipefd[1]); /* Close writing end of pipe */
+            FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
+            fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
+            printf("%s\n", recv);
+            break;
+            }
+    }
+
+    /* Forking a child process to run the command in */
+    pid_t processid = fork();
+
+    if (processid == -1) {
         printf("\nFailed forking child..");
         return;
-    } else if (pid == 0) {
+    } else if (processid == 0) {    
         /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
             e.g. "ls" or "cd" */
         execvp(command[0][0], command[0]);
@@ -180,14 +222,13 @@ int main(int argc, char const *argv[]) {
     /* Shows prompt, takes input, 
        splits input into cmd and arg and reads commands
     */
-    char userInput[MAXLENGTH], **commandArray[MAXARG];
+    char userInput[MAXLENGTH] = "";
+    char **commandArray[MAXLENGTH] = {NULL};
+    int pipeStatus=0;
     printCurrentLoc();
     fgets(userInput,MAXLENGTH,stdin);
-    sortInput(userInput,commandArray);
-    execute_command(commandArray);
-    printf("cmdArgs[0][0] : %s \n",commandArray[0][0]);
-    printf("cmdArgs[0][1] : %s \n",commandArray[0][1]);
-    printf("cmdArgs[1][0] : %s \n",commandArray[1][0]);
-    printf("cmdArgs[1][1] : %s \n",commandArray[1][1]);
+    pipeStatus = sortInput(userInput,commandArray);
+    execute_command(commandArray,pipeStatus);
+    pipeStatus=0;
   }
 }
