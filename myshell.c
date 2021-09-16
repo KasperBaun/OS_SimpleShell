@@ -8,7 +8,7 @@
 #include <errno.h>
 
 #define MAXLENGTH 1024 /* Maximum length of input string */
-#define MAXLIST 100 /* Maximum number or arguments */
+#define MAXARG 100 /* Maximum amount of args */
 
 
 /* Displays an instructional welcome message to the user*/
@@ -37,32 +37,55 @@ void tokenizerLoop(char *input, char*delim, char* output[])
    and splits it up into tokens delimited by the
    defined delimiter.
    It requires a pointer to a string array to update
-   values in that array */
+   values in that array 
+   returns int that counts how many elements is in the array*/
     int i=0;
     char *token = strtok(input,delim);
-    output[i] = token;
 
-    while(output[i] != NULL)
+    while(token != NULL)
     {
-        output[++i] = strtok(NULL,delim);
+        output[i++] = token;
+        token = strtok(NULL,delim);
     }
 }
+void printArrayContent(char*array[]){
+    for(int i=0; array[i]!=NULL;i++){
+        printf("Array[%d] is: %s \n",i,array[i]);
+    }
+}
+/* Allocates memory on the heap for the string (cmd+args) size and returns a pointer to the adress of the first element in the array */
+char ** commandFactory(char* input){
+    char **command = malloc(MAXARG*sizeof(char*));
+  
+    tokenizerLoop(input," \n",command);
+    return command;
+}
 /* Splits the input into an array of strings where command and arguments are */
-void sortInput(char input[], char* destination[]){
+void sortInput(char input[], char** commandArray[]){
+    /* Clean string for \n */ 
+    input[strcspn(input, "\n")] = 0;
 
     /* Search for chars matching '|' (pipe) first */
     if(strstr(input,"|"))
     {   /* Divide the commands separated by pipe by calling tokenizer with arguments: input, '|', output destination */
-        tokenizerLoop(input,"|",destination);
+        char *temp[MAXLENGTH];
+        tokenizerLoop(input,"|",temp);
+        printArrayContent(temp);
+        for(int i=0; temp[i]!=NULL;i++){
+            commandArray[i] = commandFactory(temp[i]);
+            printf("commandArray[%d] : %s \n",i,*commandArray[i]);
+            printf("commandArray[%d] : %s \n",i,commandArray[i][1]);
+            printf("commandArray[%d] : %s \n",i,commandArray[i][2]);
+        }
     }
     else
     {
         /* This is only called if there is no '|' - so I can safely assume that only one command is entered by user
-           therefore I use only destination[0] instead of creating a for-loop */
-        tokenizerLoop(input," \n",destination);
+           therefore I use only commandArray[0] instead of creating a for-loop */
+        //commandArray[0] = commandFactory(input);
+        printArrayContent(commandArray[0]);        
     }
 }
-
 /* Changes the current directory to the specified directory if possible*/
 int cd(char *pth){
     char path[1000];
@@ -95,26 +118,26 @@ void pipeMachine(char *command[], int i, int *pipefd_outer)
 {
  /* Implement pipe functionality here */
 }
-void execute_command(char* command[]){
+void execute_command(char** command[]){
     /* Closes all current running processes and terminates the Shell */
-    if(strcmp(command[0],"exit")==0 | strcmp(command[0], "Exit")==0 | strcmp(command[0], "EXIT")==0)
+    if(strcmp(command[0][0],"exit")==0 | strcmp(command[0][0], "Exit")==0 | strcmp(command[0][0], "EXIT")==0)
     {
         printf("%s\n","Goodbye!" );
         exit(0);
     }
     /* Shows instructional commands */
-    if(!strcmp(command[0],"commands") | !strcmp(command[0],"Commands")){
+    else if(!strcmp(command[0][0],"commands") | !strcmp(command[0][0],"Commands")){
         printCommands();
     }
         // Change path to the specified path
-    else if(strcmp(command[0],"cd")==0 | strcmp(command[0], "CD")==0){
-        if(command[1]!=NULL){
-            char* path = command[1];
+    else if(strcmp(command[0][0],"cd")==0 | strcmp(command[0][0], "CD")==0){
+        if(command[0][1]!=NULL){
+            char* path = command[0][1];
             cd(path);
         }
         return;
     }
-
+   
     /* Forking a child process to run the command in */
     pid_t pid = fork();
 
@@ -122,13 +145,9 @@ void execute_command(char* command[]){
         printf("\nFailed forking child..");
         return;
     } else if (pid == 0) {
-        if (command[1] != NULL)
-        {
-            // Implement pipe functionality here
-        }
         /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
             e.g. "ls" or "cd" */
-        execvp(command[0], command);
+        execvp(command[0][0], command[0]);
         exit(0);
     } else {
         /* wait for child to terminate */
@@ -161,11 +180,14 @@ int main(int argc, char const *argv[]) {
     /* Shows prompt, takes input, 
        splits input into cmd and arg and reads commands
     */
-    char userInput[MAXLENGTH], *parsedArguments[MAXLIST];
+    char userInput[MAXLENGTH], **commandArray[MAXARG];
     printCurrentLoc();
     fgets(userInput,MAXLENGTH,stdin);
-    //printf("User input before calling sortInput(): %s",userInput);
-    sortInput(userInput, parsedArguments);
-    execute_command(parsedArguments);
+    sortInput(userInput,commandArray);
+    execute_command(commandArray);
+    printf("cmdArgs[0][0] : %s \n",commandArray[0][0]);
+    printf("cmdArgs[0][1] : %s \n",commandArray[0][1]);
+    printf("cmdArgs[1][0] : %s \n",commandArray[1][0]);
+    printf("cmdArgs[1][1] : %s \n",commandArray[1][1]);
   }
 }
