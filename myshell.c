@@ -176,22 +176,31 @@ void execute_command(char** command[], int pipeStatus){
                 /* We are in parent process */
                 close(pipefd[1]); /* Close writing end of pipe */
                 FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
+                wait(NULL);                /* Wait for child */
                 FILE *fp;
-                //fp = fopen("receiveFile.txt","w");
-                fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
-                //for (int i = 0; recv[i] != NULL; i++) {
+                fp = fopen("receiveFile.txt","w");
+                fread(recv, 1,MAXLENGTH,in); /* Write to stream from pipe */
+                int i = 0;
+                while(recv[i] != NULL) {
                     /* write to file using fputc() function */
-                //    fputc(recv[i], fp);
-                //}
-                char *recieveFile = "recieveFile.txt";
-                command[1][2] = recieveFile;
-                printf("0 %s  ",command[1][0]);
-                printf("1 %s  ",command[1][1]);
-                printf("2 %s  ",command[1][2]);
-                execvp(command[1][0],command[1]);
+                    fputc(recv[i], fp);
+                    i++;
+                }
+                char cwdfile[256];
+                getcwd(cwdfile,sizeof(cwdfile));
+                strcat(cwdfile,"/");
+                strcat(cwdfile,"receiveFile.txt");
+                command[1][2] = cwdfile;
                 fclose(fp);
                 close(pipefd[0]);          /* Close unused read end */
-                wait(NULL);                /* Wait for child */
+                int pid2 = fork();
+                if(pid2==0){
+                execvp(command[1][0],command[1]);
+                exit(0);
+                } else if(pid2>1){
+                    wait(NULL);
+                    return;
+                } 
                 return;
             }  
     }
