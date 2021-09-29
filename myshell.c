@@ -176,26 +176,43 @@ void execute_command(char** command[], int pipeStatus){
                 /* We are in parent process */
                 close(pipefd[1]); /* Close writing end of pipe */
                 FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
+                FILE *fp;
+                //fp = fopen("receiveFile.txt","w");
                 fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
-                printf("%s\n", recv);
-            }
+                //for (int i = 0; recv[i] != NULL; i++) {
+                    /* write to file using fputc() function */
+                //    fputc(recv[i], fp);
+                //}
+                char *recieveFile = "recieveFile.txt";
+                command[1][2] = recieveFile;
+                printf("0 %s  ",command[1][0]);
+                printf("1 %s  ",command[1][1]);
+                printf("2 %s  ",command[1][2]);
+                execvp(command[1][0],command[1]);
+                fclose(fp);
+                close(pipefd[0]);          /* Close unused read end */
+                wait(NULL);                /* Wait for child */
+                return;
+            }  
     }
 
     /* Forking a child process to run the command in */
-    pid_t processid = fork();
+    if(pipeStatus == 0){
+        pid_t processid = fork();
 
-    if (processid == -1) {
-        printf("\nFailed forking child..");
-        return;
-    } else if (processid == 0) {    
-        /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
-            e.g. "ls" or "cd" */
-        execvp(command[0][0], command[0]);
-        exit(0);
-    } else {
-        /* wait for child to terminate */
-        wait(NULL);
-        return;
+        if (processid == -1) {
+            printf("\nFailed forking child..");
+            return;
+        } else if (processid == 0) {    
+            /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
+                e.g. "ls" or "cd" */
+            execvp(command[0][0], command[0]);
+            exit(0);
+        } else {
+            /* wait for child to terminate */
+            wait(NULL);
+            return;
+        }
     }
 }
 /* Just used for understanding chars in C */
@@ -229,10 +246,6 @@ int main(int argc, char const *argv[]) {
     printCurrentLoc();
     fgets(userInput,MAXLENGTH,stdin);
     pipeStatus = sortInput(userInput,commandArray);
-    printf("Element[0] is: %s \n",commandArray[0][0]);
-    printf("Element[0] is: %s \n",commandArray[0][1]);
-    printf("Element[0] is: %s \n",commandArray[1][0]);
-    printf("Element[0] is: %s \n",commandArray[1][1]);
     execute_command(commandArray,pipeStatus);
   }
 }
