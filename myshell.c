@@ -8,7 +8,7 @@
 #include <errno.h>
 
 #define MAXLENGTH 1024 /* Maximum length of input string */
-#define MAXCMD 100 /* Maximum amount of args */
+#define MAXCMD 10 /* Maximum amount of cmd+args */
 
 void pipeMachine();
 /* Displays an instructional welcome message to the user*/
@@ -49,6 +49,7 @@ void tokenizerLoop(char *input, char*delim, char* output[])
     }
 }
 void printArrayContent(char*array[]){
+    if(array[0]==NULL) return;
     if(array[0]!=NULL)
     {
     for(int i=0; array[i]!=NULL;i++){
@@ -76,8 +77,7 @@ int sortInput(char input[], char** commandArray[]){
         for(int i=0; temp[i]!=NULL;i++){
             commandArray[i] = commandFactory(temp[i]);
             //printArrayContent(commandArray[i]);
-        }
-        return 1;
+        } return 1;
     }
     else
     {
@@ -149,34 +149,35 @@ void execute_command(char** command[], int pipeStatus){
     /* Check for pipe */  
     if (pipeStatus){ 
          /* Implement pipe functionality here */
-   /* More than one command so we need to redirect some output to another process */
+   /* More than one command so we need to redirect some output to another process */            
             int pipefd[2];
             int pid;
             char recv[MAXLENGTH];
             pipe(pipefd);
+            pid=fork();
             
-            switch (pid=fork())
-            {
-            case -1: perror("fork in execute_command pipe section");
+            
+            if(pid==-1) {
+                 perror("fork in execute_command pipe section");
                 exit(1);
-            
-            case 0: 
-            /* We are in child process */
-            close(pipefd[0]); /* Close read-end of pipe */
-            FILE *out = fdopen(pipefd[1],"w"); /* Open pipe as stream for writing */
-            dup2(pipefd[1], 1);  // send stdout to the pipe
-            dup2(pipefd[1], 2);  // send stderr to the pipe
-            close(pipefd[1]);    // this descriptor is no longer needed
-            execvp(command[0][0],command[0]);
-            break;
-            
-            default:
-            /* We are in parent process */
-            close(pipefd[1]); /* Close writing end of pipe */
-            FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
-            fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
-            printf("%s\n", recv);
-            break;
+            }
+           
+            else if (pid==0){
+                  /* We are in child process */
+                close(pipefd[0]); /* Close read-end of pipe */
+                FILE *out = fdopen(pipefd[1],"w"); /* Open pipe as stream for writing */
+                dup2(pipefd[1], 1);  // send stdout to the pipe
+                dup2(pipefd[1], 2);  // send stderr to the pipe
+                close(pipefd[1]);    // this descriptor is no longer needed
+                execvp(command[0][0],command[0]);
+            }
+            else if(pid>1)
+            {
+                /* We are in parent process */
+                close(pipefd[1]); /* Close writing end of pipe */
+                FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
+                fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
+                printf("%s\n", recv);
             }
     }
 
@@ -223,12 +224,15 @@ int main(int argc, char const *argv[]) {
        splits input into cmd and arg and reads commands
     */
     char userInput[MAXLENGTH] = "";
-    char **commandArray[MAXLENGTH] = {NULL};
+    char **commandArray[MAXCMD] = {NULL};
     int pipeStatus=0;
     printCurrentLoc();
     fgets(userInput,MAXLENGTH,stdin);
     pipeStatus = sortInput(userInput,commandArray);
+    printf("Element[0] is: %s \n",commandArray[0][0]);
+    printf("Element[0] is: %s \n",commandArray[0][1]);
+    printf("Element[0] is: %s \n",commandArray[1][0]);
+    printf("Element[0] is: %s \n",commandArray[1][1]);
     execute_command(commandArray,pipeStatus);
-    pipeStatus=0;
   }
 }
