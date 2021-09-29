@@ -11,18 +11,26 @@
 #define MAXCMD 10 /* Maximum amount of cmd+args */
 
 void pipeMachine();
-/* Displays an instructional welcome message to the user*/
+
+
+/** Displays an instructional welcome message to the user */
 void displayWelcome(){
     printf("*\tHello %s and\n",getenv("USER"));
     printf("*\tWelcome to group 2's Simple Shell\n");
     printf("*\tFor a list of commands type: 'commands'\n");
     printf("*\tTo exit: Ctrl+Z or type exit/Exit/EXIT\n\n");
 }
+
+
+/** Prints the working directory path */
 void printCurrentLoc(){
     char path[256];
     getcwd(path,256);
     printf("%s >> ",path);
 }
+
+
+/** Prints currently working commands in this simple shell */
 void printCommands(){
         printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
         printf("%s\n","2. Type 'pwd' for current working directory");
@@ -31,14 +39,16 @@ void printCommands(){
         printf("%s\n","5. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching");
         printf("%s\n","6. Type 'exit/Exit' to exit the shell");
 }
+
+
+/** Splits a string into tokens, and saves them in an array.
+ *
+ * @param input: A pointer to a char array(string)
+ * @param delim: Splits the string up into tokens delimited by the defined delimiter.
+ * @param output: The location for the tokens (basicly return value, but as a pointer)
+ */
 void tokenizerLoop(char *input, char*delim, char* output[])
 {
-    /* Takes a pointer to a char array(string) as input
-   and splits it up into tokens delimited by the
-   defined delimiter.
-   It requires a pointer to a string array to update
-   values in that array 
-   returns int that counts how many elements is in the array*/
     int i=0;
     char *token = strtok(input,delim);
 
@@ -48,8 +58,9 @@ void tokenizerLoop(char *input, char*delim, char* output[])
         token = strtok(NULL,delim);
     }
 }
+
+/** Used for debugging purposes. Just a tool in development */
 void printArrayContent(char*array[]){
-    if(array[0]==NULL) return;
     if(array[0]!=NULL)
     {
     for(int i=0; array[i]!=NULL;i++){
@@ -57,13 +68,33 @@ void printArrayContent(char*array[]){
     }
     } else printf("printArrayContent() - Nothing to print im afraid");    
 }
-/* Allocates memory on the heap for the string (cmd+args) size and returns a pointer to the adress of the first element in the array */
+
+
+/** Allocates memory on the heap for the string (cmd+args) size and returns
+ * a pointer to the address of the first element in the array
+ *
+ * @param input:
+ * */
+
+/** Allocates memory on the heap for the string (cmd+args) size and returns
+ * a pointer to the address of the first element in the array
+ *
+ * @param input: Input string
+ * @return: Pointer to a tokenized array location (first array element)
+ */
 char ** commandFactory(char* input){
     char **command = malloc(MAXCMD*sizeof(char*));
     tokenizerLoop(input," \n",command);
     return command;
 }
-/* Splits the input into an array of strings where command and arguments are */
+
+
+/** Splits the input into an array of strings where command and arguments are saved in an array
+ *
+ * @param input: Input string
+ * @param commandArray: Pointer to an array of the commands and arguments. Should be given a pointer to an empty char array.
+ * @return: Returns 1 if commands include piping. Returns 0 if only one process command is given (additional arguments can also be included).
+ */
 int sortInput(char input[], char** commandArray[]){
     /* Clean string for \n */ 
     input[strcspn(input, "\n")] = 0;
@@ -77,7 +108,8 @@ int sortInput(char input[], char** commandArray[]){
         for(int i=0; temp[i]!=NULL;i++){
             commandArray[i] = commandFactory(temp[i]);
             //printArrayContent(commandArray[i]);
-        } return 1;
+        }
+        return 1;
     }
     else
     {
@@ -88,7 +120,13 @@ int sortInput(char input[], char** commandArray[]){
         return 0;       
     }
 }
-/* Changes the current directory to the specified directory if possible*/
+
+
+/** Changes the current directory to the specified directory if possible
+ *
+ * @param pth: path to the user's specified directory
+ * @return
+ */
 int cd(char *pth){
     char path[1000];
     strcpy(path,pth);
@@ -100,6 +138,7 @@ int cd(char *pth){
         chdir(cwd);
         return 0;
     }
+
     /* concatenate current working directory and user-specified path and check if it exists */
     strcat(cwd,"/");
     strcat(cwd,path);
@@ -116,6 +155,11 @@ int cd(char *pth){
             }
     return 0;
 }
+
+/** Frees up previously allocated memory for array
+ *
+ * @param commandArray: pointer to the first element of a char array that is to be freed from memory
+ */
 void freeMemory(char ***commandArray){
     for(int i=0; i<MAXLENGTH; i++){
         int j = 0;
@@ -126,6 +170,12 @@ void freeMemory(char ***commandArray){
         free(commandArray[i]);
     }
 }
+
+/** Primary function for executing the commands in the shell, and perform system calls
+ *
+ * @param command: Commands and arguments to be executed.
+ * @param pipeStatus: 1 if pipe procedure, otherwise 0.
+ */
 void execute_command(char** command[], int pipeStatus){
     /* Closes all current running processes and terminates the Shell */
     if(strcmp(command[0][0],"exit")==0 | strcmp(command[0][0], "Exit")==0 | strcmp(command[0][0], "EXIT")==0)
@@ -147,21 +197,25 @@ void execute_command(char** command[], int pipeStatus){
     }
 
     /* Check for pipe */  
-    if (pipeStatus){ 
-         /* Implement pipe functionality here */
-   /* More than one command so we need to redirect some output to another process */            
+    if (pipeStatus){
+
+         /*TODO pipe doesn't work correctly. Currently executes the first procedure (left of pipe '|' ) twice.
+          * Then nothing is displayed, but can receive user input to go back to seemingly normal.
+          * Then gets a segmentation fault on the following input. */
+
+   /* More than one command so we need to redirect some output to another process */
             int pipefd[2];
             int pid;
             char recv[MAXLENGTH];
             pipe(pipefd);
             pid=fork();
-            
-            
+
+
             if(pid==-1) {
                  perror("fork in execute_command pipe section");
                 exit(1);
             }
-           
+
             else if (pid==0){
                   /* We are in child process */
                 close(pipefd[0]); /* Close read-end of pipe */
@@ -193,7 +247,7 @@ void execute_command(char** command[], int pipeStatus){
                 close(pipefd[0]);          /* Close unused read end */
                 wait(NULL);                /* Wait for child */
                 return;
-            }  
+            }
     }
 
     /* Forking a child process to run the command in */
@@ -203,7 +257,7 @@ void execute_command(char** command[], int pipeStatus){
         if (processid == -1) {
             printf("\nFailed forking child..");
             return;
-        } else if (processid == 0) {    
+        } else if (processid == 0) {
             /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
                 e.g. "ls" or "cd" */
             execvp(command[0][0], command[0]);
@@ -215,7 +269,12 @@ void execute_command(char** command[], int pipeStatus){
         }
     }
 }
-/* Just used for understanding chars in C */
+
+
+/** Used in development process. Not program relevant.
+ * Just used for understanding chars in C
+ */
+ /*
 void * print_chars(char *process_string) {
     int i;
     int string_len;
@@ -229,13 +288,16 @@ void * print_chars(char *process_string) {
         putchar(newline);
     }
 }
-int main(int argc, char const *argv[]) {  
+*/
+
+
+int main(int argc, char const *argv[]) {
   /* Clears the console on load
    * and displays an instructional welcome message.
    */
   system("clear");
   displayWelcome();
-    
+
   while(1){
     /* Shows prompt, takes input, 
        splits input into cmd and arg and reads commands
