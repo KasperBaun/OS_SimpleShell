@@ -27,9 +27,8 @@ void printCommands(){
         printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
         printf("%s\n","2. Type 'pwd' for current working directory");
         printf("%s\n","3. Type 'ls' for listing files in current working directory");
-        printf("%s\n","4. Type 'pipe <program>' for nothing - not implemented yet");
-        printf("%s\n","5. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching");
-        printf("%s\n","6. Type 'exit/Exit' to exit the shell");
+        printf("%s\n","4. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching");
+        printf("%s\n","5. Type 'exit/Exit' to exit the shell");
 }
 void tokenizerLoop(char *input, char*delim, char* output[])
 {
@@ -150,33 +149,34 @@ void execute_command(char** command[], int pipeStatus){
     if (pipeStatus){ 
          /* Implement pipe functionality here */
    /* More than one command so we need to redirect some output to another process */            
-            int pipefd[2];
-            int pid;
-            char recv[MAXLENGTH];
-            pipe(pipefd);
-            pid=fork();
+        char recv[MAXLENGTH];
+        int pipefd[2];
+        pipe(pipefd);
+        pid_t pid;
+        pid=fork();
             
             
             if(pid==-1) {
                  perror("fork in execute_command pipe section");
                 exit(1);
-            }
-           
-            else if (pid==0){
-                  /* We are in child process */
+            }   
+            else if (pid==0)
+            {
+                /* We are in child process */
                 close(pipefd[0]); /* Close read-end of pipe */
                 FILE *out = fdopen(pipefd[1],"w"); /* Open pipe as stream for writing */
                 dup2(pipefd[1], 1);  // send stdout to the pipe
-                dup2(pipefd[1], 2);  // send stderr to the pipe
+                //dup2(pipefd[1], 2);  // send stderr to the pipe
                 close(pipefd[1]);    // this descriptor is no longer needed
                 execvp(command[0][0],command[0]);
-            }
-            else if(pid>1)
-            {
+                exit(0);
+            } 
+            else if(pid>0)
+            {   
+                wait(0); /* Wait for child to die */
                 /* We are in parent process */
                 close(pipefd[1]); /* Close writing end of pipe */
                 FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
-                wait(NULL);                /* Wait for child */
                 FILE *fp;
                 fp = fopen("receiveFile.txt","w");
                 fread(recv, 1,MAXLENGTH,in); /* Write to stream from pipe */
@@ -193,17 +193,23 @@ void execute_command(char** command[], int pipeStatus){
                 command[1][2] = cwdfile;
                 fclose(fp);
                 close(pipefd[0]);          /* Close unused read end */
-                int pid2 = fork();
-                if(pid2==0){
-                execvp(command[1][0],command[1]);
-                exit(0);
-                } else if(pid2>1){
-                    wait(NULL);
-                    return;
+             }
+                    
+            pid_t pid2 = fork();
+                if(pid2==-1) {
+                    perror("fork in execute_command pipe section");
+                    exit(1);
+                } else if(pid2==0){
+                    execvp(command[1][0],command[1]);
+                    exit(0);
+                } else if(pid2>0)
+                {
+                    wait(0);
+                    return;                
                 } 
-                return;
             }  
-    }
+
+    
 
     /* Forking a child process to run the command in */
     if(pipeStatus == 0){
@@ -219,7 +225,7 @@ void execute_command(char** command[], int pipeStatus){
             exit(0);
         } else {
             /* wait for child to terminate */
-            wait(NULL);
+            wait(0);
             return;
         }
     }

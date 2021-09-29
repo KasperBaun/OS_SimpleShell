@@ -21,7 +21,7 @@ The commands are:
  1. Type 'cd <path>' or 'CD <path>' to change current directory.
  2. Type 'pwd' for current working directory.
  3. Type 'ls' for listing files in current working directory.
- 4. Type 'pipe <program>' for nothing - not implemented yet.
+ 4. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching
  5. Type 'exit/Exit/EXIT' to exit the shell.
 
 
@@ -45,11 +45,11 @@ This redirects the output over to the path/filename.txt
 ## I/O REDIRECTION ##
 Using the pipe function we can make the output of one process become the input for another. This is also reffered to as InputOutput Redirection.
 Examples of InputOutput Redirection are:
-strings myshell.c | grep poggers <- the first function "strings myshell.c" takes all the strings from myshell.c and then we pipe them to another program which uses grep to search the strings for the string "poggers". So the output from the first program becomes the input for the next program.
+echo "hey" | grep h <- the first function "strings myshell.c" takes all the strings from echo and then we pipe them to another program which uses grep to search the strings for the string containing 'h'. So the output from the first program becomes the input for the next program.
 
 
-echo howdy > hello.txt <- this takes the output "howdy" and puts it in a hello.txt file.
-cat hello.txt > howdy.txt <- this takes the hello.txt and copies it to a howdy.txt
+echo "hey" | grep h <- this takes the output "hey" and searches for strings matching h.
+ls | wc -l <- this counts the amount of words in ls (the files present)
 
 Bibliography #2 - Gary Explains Linux Terminal Commands: Pipes and Redirection.
 
