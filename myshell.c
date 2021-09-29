@@ -11,6 +11,8 @@
 #define MAXCMD 100 /* Maximum amount of args */
 
 void pipeMachine();
+
+
 /* Displays an instructional welcome message to the user*/
 void displayWelcome(){
     printf("*\tHello %s and\n",getenv("USER"));
@@ -18,11 +20,15 @@ void displayWelcome(){
     printf("*\tFor a list of commands type: 'commands'\n");
     printf("*\tTo exit: Ctrl+Z or type exit/Exit/EXIT\n\n");
 }
+
+
 void printCurrentLoc(){
     char path[256];
     getcwd(path,256);
     printf("%s >> ",path);
 }
+
+
 void printCommands(){
         printf("%s\n","1. Type 'cd <path>' or 'CD <path>' to change current directory");
         printf("%s\n","2. Type 'pwd' for current working directory");
@@ -31,6 +37,8 @@ void printCommands(){
         printf("%s\n","5. Most linux commands works since the shell makes use of \nexecvp() system call and searchs the $PATH variable for binaries matching");
         printf("%s\n","6. Type 'exit/Exit' to exit the shell");
 }
+
+
 void tokenizerLoop(char *input, char*delim, char* output[])
 {
     /* Takes a pointer to a char array(string) as input
@@ -48,7 +56,9 @@ void tokenizerLoop(char *input, char*delim, char* output[])
         token = strtok(NULL,delim);
     }
 }
-void printArrayContent(char*array[]){
+
+
+void printArrayContent(char* array[]){
     if(array[0]!=NULL)
     {
     for(int i=0; array[i]!=NULL;i++){
@@ -56,12 +66,16 @@ void printArrayContent(char*array[]){
     }
     } else printf("printArrayContent() - Nothing to print im afraid");    
 }
+
+
 /* Allocates memory on the heap for the string (cmd+args) size and returns a pointer to the adress of the first element in the array */
 char ** commandFactory(char* input){
     char **command = malloc(MAXCMD*sizeof(char*));
     tokenizerLoop(input," \n",command);
     return command;
 }
+
+
 /* Splits the input into an array of strings where command and arguments are */
 int sortInput(char input[], char** commandArray[]){
     /* Clean string for \n */ 
@@ -88,6 +102,8 @@ int sortInput(char input[], char** commandArray[]){
         return 0;       
     }
 }
+
+
 /* Changes the current directory to the specified directory if possible*/
 int cd(char *pth){
     char path[1000];
@@ -100,6 +116,7 @@ int cd(char *pth){
         chdir(cwd);
         return 0;
     }
+
     /* concatenate current working directory and user-specified path and check if it exists */
     strcat(cwd,"/");
     strcat(cwd,path);
@@ -116,6 +133,8 @@ int cd(char *pth){
             }
     return 0;
 }
+
+
 void freeMemory(char ***commandArray){
     for(int i=0; i<MAXLENGTH; i++){
         int j = 0;
@@ -126,7 +145,15 @@ void freeMemory(char ***commandArray){
         free(commandArray[i]);
     }
 }
+
+
 void execute_command(char** command[], int pipeStatus){
+
+    for (int i = 0; i < 10; ++i) {
+        printArrayContent(command[i]);
+    }
+
+
     /* Closes all current running processes and terminates the Shell */
     if(strcmp(command[0][0],"exit")==0 | strcmp(command[0][0], "Exit")==0 | strcmp(command[0][0], "EXIT")==0)
     {
@@ -148,19 +175,18 @@ void execute_command(char** command[], int pipeStatus){
 
     /* Check for pipe */  
     if (pipeStatus){ 
-         /* Implement pipe functionality here */
-   /* More than one command so we need to redirect some output to another process */
-            int pipefd[2];
-            int pid;
-            char recv[MAXLENGTH];
-            pipe(pipefd);
-            
-            switch (pid=fork())
-            {
-            case -1: perror("fork in execute_command pipe section");
-                exit(1);
-            
-            case 0: 
+        /*todo Implement pipe functionality here */
+    /* More than one command so we need to redirect some output to another process */
+        int pipefd[2];
+        int pid;
+        char recv[MAXLENGTH];
+        pipe(pipefd);
+
+        switch (pid=fork())
+        {
+        case -1: perror("fork in execute_command pipe section");
+            exit(1);
+        case 0:
             /* We are in child process */
             close(pipefd[0]); /* Close read-end of pipe */
             FILE *out = fdopen(pipefd[1],"w"); /* Open pipe as stream for writing */
@@ -169,16 +195,59 @@ void execute_command(char** command[], int pipeStatus){
             close(pipefd[1]);    // this descriptor is no longer needed
             execvp(command[0][0],command[0]);
             break;
-            
-            default:
+        default:
             /* We are in parent process */
             close(pipefd[1]); /* Close writing end of pipe */
             FILE *in = fdopen(pipefd[0],"r"); /* Open pipe as stream for reading */
             fread(recv, MAXLENGTH,1,in); /* Write to stream from pipe */
             printf("%s\n", recv);
             break;
-            }
-    }
+        }
+
+//    Tried to get pipe to work. Used sources:
+//      https://www.youtube.com/watch?v=6xbLgZpOBi8
+// and  https://stackoverflow.com/questions/2659590/pipe-implementation?noredirect=1&lq=1
+//    doesn't work correctly
+//        int pipe_fd[2]; //pipe_fd[1] is write end of pipe, and pipe_fd[0] is read end.
+//
+//        if(pipe(pipe_fd) == -1) {
+//            printf("Error in pipe - ret 1");
+//            exit(1);
+//        }
+//
+//        int pid1 = fork();
+//        if (pid1 < 0) {
+//            printf("Error in fork - ret 2");
+//            exit(1);
+//        }
+//
+//        if (pid1 == 0) {    //we are in child process
+//            dup2(pipe_fd[1], STDOUT_FILENO);
+//            close(pipe_fd[0]);
+//            close(pipe_fd[1]);          //as it was duplicated, we can close the fd1 ends as well so we have 1 left
+//            execlp("ping","ping", "-c", "1", "google.com", NULL);         //test case
+//        }
+//
+//        int pid2 = fork();
+//        if (pid2 < 0) {
+//            printf("Error in fork - ret 3");
+//            exit(1);
+//        }
+//
+//        //child process 2
+//        if (pid2 == 0) {
+//            dup2(pipe_fd[0], STDIN_FILENO);
+//            close(pipe_fd[0]);
+//            close(pipe_fd[1]);
+//            execlp("grep", "grep", "rtt", NULL);          //test case
+//        }
+//
+//        close(pipe_fd[0]);
+//        close(pipe_fd[1]);
+//
+//        waitpid(pid1, NULL, 0);
+//        waitpid(pid2, NULL, 0);
+//    }
 
     /* Forking a child process to run the command in */
     pid_t processid = fork();
@@ -186,7 +255,7 @@ void execute_command(char** command[], int pipeStatus){
     if (processid == -1) {
         printf("\nFailed forking child..");
         return;
-    } else if (processid == 0) {    
+    } else if (processid == 0) {
         /* If no commands match then the shell uses exec to search for files (programs) to run that match the userinput.
             e.g. "ls" or "cd" */
         execvp(command[0][0], command[0]);
@@ -197,6 +266,8 @@ void execute_command(char** command[], int pipeStatus){
         return;
     }
 }
+
+
 /* Just used for understanding chars in C */
 void * print_chars(char *process_string) {
     int i;
@@ -211,6 +282,8 @@ void * print_chars(char *process_string) {
         putchar(newline);
     }
 }
+
+
 int main(int argc, char const *argv[]) {  
   /* Clears the console on load
    * and displays an instructional welcome message.
